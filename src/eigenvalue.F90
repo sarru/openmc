@@ -204,6 +204,7 @@ contains
     ! Reset global tally results
     if (.not. active_batches) then
       call reset_result(global_tallies)
+      call reset_result(global_diff_tallies)
       n_realizations = 0
     end if
 

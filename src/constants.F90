@@ -322,6 +322,12 @@ module constants
        K_TRACKLENGTH = 3, &
        LEAKAGE       = 4
 
+  ! Differential tally (perturbation) parameters
+  integer, parameter :: &
+       PERT_ABSORPTION = 1, &
+       PERT_FISSION = 2, &
+       PERT_SCATTER = 3
+
   ! ============================================================================
   ! RANDOM NUMBER STREAM CONSTANTS
 

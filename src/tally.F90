@@ -664,6 +664,8 @@ contains
     type(TallyObject), pointer, save :: t => null()
     type(Material),    pointer, save :: mat => null()
     type(Reaction),    pointer, save :: rxn => null()
+    class(Perturbation), pointer :: pert => null()
+    type(DiffTally), pointer :: diff_tally => null()
 !$omp threadprivate(t, mat, rxn)
 
     ! Determine track-length estimate of flux
@@ -1034,6 +1036,42 @@ contains
       if (assume_separate) exit TALLY_LOOP
 
     end do TALLY_LOOP
+
+    DIFF_TALLY_LOOP: do i = 1, n_perturbations
+      pert => perturbations(i) % obj
+
+      select type (pert)
+
+      type is (XSPerturbation)
+        if (p % material == MATERIAL_VOID) cycle DIFF_TALLY_LOOP
+
+        mat => materials(p % material)
+        do j = 1, mat % n_nuclides
+          if (pert % nuclide == mat % nuclide(j)) exit
+          if (j == mat % n_nuclides) cycle DIFF_TALLY_LOOP
+        end do
+
+        atom_density = mat % atom_density(j)
+
+        diff_tally => global_diff_tallies(i)
+        diff_tally % subtally % value = diff_tally % subtally % value &
+            &- atom_density * distance &
+            &* exp(-atom_density * micro_xs(j) % total * distance) &
+            &/ (1.0_8 - exp(-atom_density * micro_xs(j) % total * distance))
+
+        select case (pert % reaction)
+
+        case (PERT_ABSORPTION)
+          diff_tally % tally % value = diff_tally % tally % value &
+              &+
+
+        end select 
+
+      type is (DensityPerturbation)
+
+      end select
+
+    end do DIFF_TALLY_LOOP
 
     ! Reset tally map positioning
     position = 0

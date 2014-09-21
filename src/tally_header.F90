@@ -128,6 +128,11 @@ module tally_header
       procedure :: clear => tallyobject_clear ! Deallocates TallyObject
   end type TallyObject
 
+  type DiffTally
+    type(TallyResult)  :: tally
+    type(TallyResult)  :: subtally
+  end type DiffTally
+
   contains
 
 !===============================================================================

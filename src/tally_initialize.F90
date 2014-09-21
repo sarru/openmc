@@ -21,6 +21,7 @@ contains
 
     call setup_tally_arrays()
     call setup_tally_maps()
+    call setup_global_diff_tallies()
 
   end subroutine configure_tallies
 
@@ -125,6 +126,12 @@ contains
     end do TALLY_LOOP
 
   end subroutine setup_tally_maps
+
+  subroutine setup_global_diff_tallies()
+
+    allocate(global_diff_tallies((n_perturbations + n_perturbations**2)/2))
+
+  end subroutine setup_global_diff_tallies
 
 !===============================================================================
 ! ADD_MAP_ELEMENT adds a pair of tally and bin indices to the list for a given

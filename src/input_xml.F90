@@ -1,20 +1,21 @@
 module input_xml
 
-  use cmfd_input,       only: configure_cmfd
+  use cmfd_input,          only: configure_cmfd
   use constants
-  use dict_header,      only: DictIntInt, ElemKeyValueCI
-  use error,            only: fatal_error, warning
-  use geometry_header,  only: Cell, Surface, Lattice
+  use dict_header,         only: DictIntInt, ElemKeyValueCI
+  use error,               only: fatal_error, warning
+  use geometry_header,     only: Cell, Surface, Lattice
   use global
-  use list_header,      only: ListChar, ListReal
-  use mesh_header,      only: StructuredMesh
-  use output,           only: write_message
+  use list_header,         only: ListChar, ListReal
+  use mesh_header,         only: StructuredMesh
+  use output,              only: write_message
+  use perturbation_header
   use plot_header
-  use random_lcg,       only: prn
-  use string,           only: lower_case, to_str, str_to_int, str_to_real, &
-                              starts_with, ends_with
-  use tally_header,     only: TallyObject, TallyFilter
-  use tally_initialize, only: add_tallies
+  use random_lcg,          only: prn
+  use string,              only: lower_case, to_str, str_to_int, str_to_real, &
+                                 starts_with, ends_with
+  use tally_header,        only: TallyObject, TallyFilter
+  use tally_initialize,    only: add_tallies
   use xml_interface
 
   implicit none
@@ -1439,6 +1440,14 @@ contains
     type(NodeList), pointer :: node_nuc_list => null()
     type(NodeList), pointer :: node_ele_list => null()
     type(NodeList), pointer :: node_sab_list => null()
+    integer                 :: n_xs_pert  ! # of cross section perturbations
+    integer                 :: n_den_pert ! # of density perturbations
+    integer                 :: n_frac_pert ! # of fraction perturbations
+    type(NodeList), pointer :: node_xs_pert_list => null()
+    type(NodeList), pointer :: node_den_pert_list => null()
+    type(NodeList), pointer :: node_frac_pert_list => null()
+    type(Node), pointer     :: node_pert => null()
+    class(Perturbation), pointer :: pert => null()
 
     ! Display output message
     message = "Reading materials XML file..."
@@ -1473,7 +1482,7 @@ contains
     index_nuclide = 0
     index_sab = 0
 
-    do i = 1, n_materials
+    MAT_LOOP: do i = 1, n_materials
       mat => materials(i)
 
       ! Get pointer to i-th material node
@@ -1806,7 +1815,102 @@ contains
 
       ! Add material to dictionary
       call material_dict % add_key(mat % id, i)
-    end do
+    end do MAT_LOOP
+
+    ! Get pointer to lists of perturbation elements.
+    call get_node_list(doc, "xs_perturbation", node_xs_pert_list)
+    call get_node_list(doc, "density_perturbation", node_den_pert_list)
+    call get_node_list(doc, "fraction_perturbation", node_frac_pert_list)
+
+    ! Allocate perturbations array
+    n_xs_pert = get_list_size(node_xs_pert_list)
+    n_den_pert = get_list_size(node_den_pert_list)
+    n_frac_pert = get_list_size(node_frac_pert_list)
+    n_perturbations = n_xs_pert + n_den_pert + n_frac_pert
+    allocate(perturbations(n_perturbations))
+
+    ! Add perturbations to array
+    XS_PERTURBATION_LOOP: do i = 1, n_xs_pert
+      ! Allocate the perturbation and declare its type as XSPerturbation.
+      allocate(XSPerturbation :: perturbations(i) % obj)
+      pert => perturbations(i) % obj
+      select type (pert)
+      type is (XSPerturbation)
+
+      ! Get the pointer to the i-th perturbation in the XML file.
+      call get_list_item(node_xs_pert_list, i, node_pert)
+
+      ! Get the perturbation's ID.
+      if (check_for_node(node_pert, 'id')) then
+        call get_node_value(node_pert, 'id', pert % id)
+      else
+        message = 'Must specify id of the perturbation in materials XML file.'
+        call fatal_error()
+      end if
+
+      ! Get the perturbed nuclide name.
+      if (check_for_node(node_pert, 'nuclide')) then
+        call get_node_value(node_pert, 'nuclide', temp_str)
+      else
+        message = 'No nuclide name specified for perturbation ' // &
+            &trim(to_str(pert % id))
+        call fatal_error()
+      end if
+
+      ! Get the perturbed nuclide cross section.
+      if (check_for_node(node_pert, 'xs')) then
+        call get_node_value(node_nuc, 'xs', name)
+      else
+        if (default_xs == '') then
+          message = 'No cross section specified for nuclide in perturbation ' &
+              &// trim(to_str(pert % id))
+          call fatal_error()
+        else
+          name = default_xs
+        end if
+      end if
+
+      ! Create full name.
+      name = trim(temp_str) // '.' // trim(name)
+
+      ! Save the index of the nuclide.
+      if (nuclide_dict % has_key(name)) then
+        pert % nuclide = nuclide_dict % get_key(name)
+      else
+        message = 'Nuclide in perturbation ' // trim(to_str(pert % id)) // &
+            & ' is not present in any material.'
+        call fatal_error()
+      end if
+
+      if (check_for_node(node_pert, 'reaction')) then
+        call get_node_value(node_pert, 'reaction', temp_str)
+        select case (trim(temp_str))
+        case ('absorption')
+          pert % reaction = PERT_ABSORPTION
+        case ('fission')
+          pert % reaction = PERT_FISSION
+        case ('scatter')
+          pert % reaction = PERT_SCATTER
+        case default
+          message = "Unnaccepted reaction for perturbation " // &
+              &trim(to_str(pert % id)) // ". Please specify either " // &
+              &"'scatter', 'fission', or 'absorption'."
+          call fatal_error()
+        end select
+      else
+        message = 'No reaction specified in perturbation ' // &
+            &trim(to_str(pert % id))
+        call fatal_error()
+      end if
+
+      end select
+    end do XS_PERTURBATION_LOOP
+
+    DENSITY_PERTURBATION_LOOP: do i = 1, n_den_pert
+    end do DENSITY_PERTURBATION_LOOP
+
+    FRACTION_PERTURBATION_LOOP: do i = 1, n_frac_pert
+    end do FRACTION_PERTURBATION_LOOP
 
     ! Set total number of nuclides and S(a,b) tables
     n_nuclides_total = index_nuclide

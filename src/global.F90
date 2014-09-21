@@ -1,19 +1,20 @@
 module global
 
-  use ace_header,       only: Nuclide, SAlphaBeta, xsListing, NuclideMicroXS, &
-                              MaterialMacroXS, Nuclide0K
-  use bank_header,      only: Bank
+  use ace_header,          only: Nuclide, SAlphaBeta, xsListing, &
+                                 NuclideMicroXS, MaterialMacroXS, Nuclide0K
+  use bank_header,         only: Bank
   use cmfd_header
   use constants
-  use dict_header,      only: DictCharInt, DictIntInt
-  use geometry_header,  only: Cell, Universe, Lattice, Surface
-  use material_header,  only: Material
-  use mesh_header,      only: StructuredMesh
-  use plot_header,      only: ObjectPlot
-  use set_header,       only: SetInt
-  use source_header,    only: ExtSource
-  use tally_header,     only: TallyObject, TallyMap, TallyResult
-  use timer_header,     only: Timer
+  use dict_header,         only: DictCharInt, DictIntInt
+  use geometry_header,     only: Cell, Universe, Lattice, Surface
+  use material_header,     only: Material
+  use mesh_header,         only: StructuredMesh
+  use perturbation_header
+  use plot_header,         only: ObjectPlot
+  use set_header,          only: SetInt
+  use source_header,       only: ExtSource
+  use tally_header,        only: TallyObject, TallyMap, TallyResult, DiffTally
+  use timer_header,        only: Timer
 
 #ifdef HDF5
   use hdf5_interface,  only: HID_T
@@ -120,6 +121,13 @@ module global
   !   3) leakage fraction
 
   type(TallyResult), target :: global_tallies(N_GLOBAL_TALLIES)
+
+  ! Global differential tallies (for perturbations).
+  type(DiffTally), allocatable, target :: global_diff_tallies(:)
+
+  ! Perturbations
+  integer                                          :: n_perturbations
+  type(PerturbationContainer), allocatable, target :: perturbations(:)
 
   ! Tally map structure
   type(TallyMap), allocatable :: tally_maps(:)
