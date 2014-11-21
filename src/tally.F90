@@ -2295,13 +2295,14 @@ contains
     end do
 
   end function get_next_bin
-  
+
 !===============================================================================
-! CHECK whether uncertainty reach the threshold, find the maximum 
+! CHECK_TALLY_TRIGGERS whether uncertainty reach the threshold, find the maximum
 ! uncertainty/threshold ratio for all triggers
-!=============================================================================== 
- subroutine check_tally_triggers() 
-    
+!===============================================================================
+
+ subroutine check_tally_triggers()
+ 
     integer :: i              ! index in tallies array
     integer :: j              ! level in tally hierarchy
     integer :: k              ! loop index for scoring bins
@@ -2321,32 +2322,29 @@ contains
                                             ! result
     real(8) :: temp_trig                    ! temporary trigger of results for 
                                             ! scores
-    character(len=52), allocatable   :: temp_nuclide_name(:) ! temporary nuclide 
+    character(len=52), allocatable   :: temp_nuclide_name(:) ! temporary nuclide
                                                              ! names
-    type(Temptrigger), target        :: temp_result          ! get the tempory 
-                                                             ! result 
-    type(TriggerObject)              :: temp_real            ! the temporary 
-                                                             ! standard deviation
-                                                             ! relative error and 
-                                                             ! variance of the 
-                                                             ! results
+    type(Temptrigger), target        :: temp_result ! get the tempory result 
+    type(TriggerObject)              :: temp_real ! the temporary standard
+                                                  ! deviation relative error and
+                                                  ! variance of the results
     type(TallyObject), pointer :: t => null()
     type(Temptrigger), pointer :: temp_t => null()
-    
+ 
     trig_dist % max_ratio = 0
     if (master) then
       satisfy_triggers = .true.
       ! check trigger for Egienvalue
       if (keff_trigger % trigger_type > 0) then
-        select case (keff_trigger % trigger_type)        
+        select case (keff_trigger % trigger_type)
         case(VARIANCE) 
           temp_keff_trig=k_combined(2) ** 2
-        case(RELATIVE_ERROR)      
+        case(RELATIVE_ERROR)
           temp_keff_trig=k_combined(2) / k_combined(1)
         case default
           temp_keff_trig=k_combined(2)
         end select
-         
+
         if (temp_keff_trig > keff_trigger % threshold) then
           satisfy_triggers = .false.
           if (keff_trigger % trigger_type == VARIANCE) then
@@ -2355,25 +2353,25 @@ contains
             temp_ratio = temp_keff_trig / keff_trigger % threshold
           end if
           if (trig_dist % max_ratio < temp_ratio) then
-            trig_dist % max_ratio = temp_ratio             
+            trig_dist % max_ratio = temp_ratio
             trig_dist % temp_name = CHAR_EIGENVALUE
-          end if 
-        end if 
+          end if
+        end if
       end if
-      temp_t => temp_result              
+      temp_t => temp_result
       ! Compute uncertainties for all tallies, scores with triggers
       TALLY_LOOP: do i = 1, n_tallies
         t => tallies(i)
         allocate(temp_t % results(t % total_score_bins, t % total_filter_bins))
         ! Calculate statistics and get the temporary result
         if (n_realizations > 1) call tally_trigger_statistics(t,temp_t)
-        
+
         allocate(temp_nuclide_name(t % n_nuclide_bins))
-        
+
         ! Check trigger for current
         if (t % type == TALLY_SURFACE_CURRENT) then
           call compute_tally_current(t,temp_t,temp_real)
-          select case (t % score(1) % type)        
+          select case (t % score(1) % type)
             case(VARIANCE) 
               temp_trig = temp_real % variance
             case(RELATIVE_ERROR)      
@@ -2381,7 +2379,7 @@ contains
             case default
               temp_trig = temp_real % std_dev
             end select
-        
+
           if (temp_trig > t % score(1) % threshold) then
             satisfy_triggers = .false.
             if (t % score(1) % type == VARIANCE) then
@@ -2389,7 +2387,7 @@ contains
             else
               temp_ratio = temp_trig / t % score(1) % threshold
             end if 
-            
+
             if (trig_dist % max_ratio < temp_ratio) then
               trig_dist % max_ratio = temp_ratio
               trig_dist % temp_name  = t % score_for_all(1)
@@ -2399,19 +2397,19 @@ contains
           end if
           cycle TALLY_LOOP
         end if
-       
-       
+
+
         matching_bins(1:t % n_filters) = 0
         j = 1
-        
+
         ! WARNING: Admittedly, the logic for moving for getting results is
         ! extremely confusing and took quite a bit of time to get correct. The
         ! logic is structured this way since it is not practical to have a do
-        ! loop for each filter variable (given that only a few filters are likely
-        ! to be used for a given tally.
+        ! loop for each filter variable (given that only a few filters are
+        ! likely to be used for a given tally.
 
         ! Initialize bins, filter level, and indentation
-        
+
         print_bin: do
           find_bin: do
             if (t % n_filters == 0) exit find_bin
@@ -2424,15 +2422,15 @@ contains
               if (j == t % n_filters) exit find_bin
             end if 
           end do find_bin
-        
+
           if (t % n_filters > 0) then
             filter_index = sum((max(matching_bins(1:t%n_filters),1) - 1) * &
-                t % stride) + 1
+                 t % stride) + 1
           else
             filter_index = 1
           end if
             score_index = 0
-          
+
           do n = 1, t % n_nuclide_bins
             i_nuclide = t % nuclide_bins(n)
             if (i_nuclide == -1) then
@@ -2442,110 +2440,110 @@ contains
               temp_nuclide_name(n) = xs_listings(i_listing) % alias
             end if
             k = 0
-                             
+
             do l = 1, t % n_user_score_bins
               k = k + 1
               score_index = score_index + 1
-              
+
               do s = 1, t % n_user_triggers
-              
+
                 temp_real % std_dev = 0.
                 temp_real % rel_err = 0.
                 temp_real % variance = 0.
-               
+
                 select case(t % score_bins(k))
-                  
-                case (SCORE_SCATTER_N, SCORE_NU_SCATTER_N)         
-                  
+
+                case (SCORE_SCATTER_N, SCORE_NU_SCATTER_N)
+
                   temp_std_dev = temp_t % results(score_index, filter_index) % &
                        trigger_sum_sq
                   temp_rel_err = temp_std_dev / temp_t % results(score_index, & 
                        filter_index) % trigger_sum
-                  if (temp_real % std_dev < temp_std_dev) then 
+                  if (temp_real % std_dev < temp_std_dev) then
                     temp_real % std_dev = temp_std_dev
                   end if
-          
-                  if (temp_real % rel_err < temp_rel_err) then 
+
+                  if (temp_real % rel_err < temp_rel_err) then
                     temp_real % rel_err = temp_rel_err
                   end if
-                    temp_real % variance = temp_real % std_dev**2 
-               
+                  temp_real % variance = temp_real % std_dev**2
+
                 case (SCORE_SCATTER_PN, SCORE_NU_SCATTER_PN)
                   score_index = score_index - 1
-             
+
                   do n_order = 0, t % moment_order(k)
                     score_index = score_index + 1
-                    temp_std_dev = temp_t % results(score_index, & 
+                    temp_std_dev = temp_t % results(score_index, &
                          filter_index)% trigger_sum_sq
                     temp_rel_err = temp_std_dev / temp_t % results &
                          (score_index,filter_index) % trigger_sum
                     if (temp_real % std_dev < temp_std_dev) then 
                       temp_real % std_dev = temp_std_dev
                     end if
-                    
-                    if (temp_real % rel_err < temp_rel_err) then 
+
+                    if (temp_real % rel_err < temp_rel_err) then
                       temp_real % rel_err = temp_rel_err
                     end if
-                    temp_real % variance = temp_real % std_dev**2       
+                    temp_real % variance = temp_real % std_dev**2
                   end do
                   k = k + t % moment_order(k)
-              
+
                 case (SCORE_SCATTER_YN, SCORE_NU_SCATTER_YN, SCORE_FLUX_YN, &
                      SCORE_TOTAL_YN)
                   score_index = score_index - 1
                   do n_order = 0, t % moment_order(k)
                     do nm_order = -n_order, n_order
                       score_index = score_index + 1
-                      temp_std_dev = temp_t % results(score_index, & 
+                      temp_std_dev = temp_t % results(score_index, &
                            filter_index) % trigger_sum_sq
                       temp_rel_err = temp_std_dev / temp_t % results &
                            (score_index, filter_index) % trigger_sum
-                      if (temp_real % std_dev < temp_std_dev) then 
+                      if (temp_real % std_dev < temp_std_dev) then
                         temp_real % std_dev = temp_std_dev
                       end if
-          
-                      if (temp_real % rel_err < temp_rel_err) then 
+
+                      if (temp_real % rel_err < temp_rel_err) then
                         temp_real % rel_err = temp_rel_err
                       end if
-                        temp_real % variance = temp_real % std_dev**2    
-      
+                      temp_real % variance = temp_real % std_dev**2
+
                     end do
                   end do
                   k = k + (t % moment_order(k) + 1)**2 - 1
-           
+
                 case default
                   temp_std_dev = temp_t % results(score_index,  &
                        filter_index) % trigger_sum_sq
                   temp_rel_err = temp_std_dev / temp_t % results &
                        (score_index, filter_index) % trigger_sum
-                  if (temp_real % std_dev < temp_std_dev) then 
+                  if (temp_real % std_dev < temp_std_dev) then
                     temp_real % std_dev = temp_std_dev
                   end if
-      
-                  if (temp_real % rel_err < temp_rel_err) then 
+
+                  if (temp_real % rel_err < temp_rel_err) then
                     temp_real % rel_err = temp_rel_err
                   end if
-                      temp_real % variance = temp_real % std_dev**2       
+                  temp_real % variance = temp_real % std_dev**2
                 end select
-            
+
                 if (t % trigger_for_all .or. t % score(s) % position == l) then
-                  select case (t % score(s) % type)        
-                  case(VARIANCE) 
+                  select case (t % score(s) % type)
+                  case(VARIANCE)
                     temp_trig = temp_real % variance
-                  case(RELATIVE_ERROR)      
+                  case(RELATIVE_ERROR)
                     temp_trig = temp_real % rel_err
                   case default
                     temp_trig = temp_real % std_dev
                   end select
-              
+
                   if (temp_trig > t % score(s) % threshold) then
                     satisfy_triggers = .false.
                     if (t % score(s) % type == VARIANCE) then
                       temp_ratio = sqrt(temp_trig/ t % score(s) % threshold)
                     else
-                    temp_ratio = temp_trig/ t % score(s) % threshold
-                    end if 
-                  
+                      temp_ratio = temp_trig/ t % score(s) % threshold
+                    end if
+
                     if (trig_dist % max_ratio < temp_ratio) then
                       trig_dist % max_ratio = temp_ratio
                       trig_dist % temp_name  = t % score_for_all(l)
@@ -2562,14 +2560,14 @@ contains
         deallocate (temp_nuclide_name)
         deallocate (temp_t % results)
       end do TALLY_LOOP
-    end if    
+    end if
  end subroutine check_tally_triggers
 
 !===============================================================================
-! compute_tally_current "compute the current for a tally with a current score to 
+! COMPUTE_TALLY_CURRENT "compute the current for a tally with a current score to
 ! compare to trigger threshold
 !===============================================================================
- 
+
  subroutine compute_tally_current(t,temp_t,s)
 
     type(TallyObject), pointer :: t
@@ -2583,12 +2581,10 @@ contains
     integer :: i_filter_ein         ! index for incoming energy filter
     integer :: i_filter_surf        ! index for surface filter
     integer :: n                    ! number of incoming energy bins
-    integer :: len1                 ! length of string
-    integer :: len2                 ! length of string
     integer :: filter_index         ! index in results array for filters
     logical :: print_ebin           ! should incoming energy bin be displayed?
-    real(8) :: temp_rel_err  = 0.0         ! temporary relative error of result
-    real(8) :: temp_std_dev  = 0.0         ! temporary standard deviration of result
+    real(8) :: temp_rel_err  = 0.0  ! temporary relative error of result
+    real(8) :: temp_std_dev  = 0.0  ! temporary standard deviration of result
     type(TriggerObject)   :: s
     type(StructuredMesh), pointer :: m => null()
 
@@ -2616,16 +2612,17 @@ contains
           do l = 1, n
             if (print_ebin) then
               matching_bins(i_filter_ein) = l
-
             end if
 
             ! Left Surface
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i-1, j, k /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_RIGHT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2635,9 +2632,11 @@ contains
             s % variance = temp_std_dev**2
 
             matching_bins(i_filter_surf) = OUT_RIGHT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2650,9 +2649,11 @@ contains
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i, j, k /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_RIGHT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2660,11 +2661,13 @@ contains
               s % rel_err = temp_rel_err
             end if
             s % variance = s % std_dev**2
-            
+
             matching_bins(i_filter_surf) = OUT_RIGHT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2677,9 +2680,11 @@ contains
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i, j-1, k /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_FRONT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2690,9 +2695,11 @@ contains
 
 
             matching_bins(i_filter_surf) = OUT_FRONT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2705,9 +2712,11 @@ contains
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i, j, k /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_FRONT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2717,9 +2726,11 @@ contains
             s % variance = s % std_dev**2
 
             matching_bins(i_filter_surf) = OUT_FRONT
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2732,9 +2743,11 @@ contains
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i, j, k-1 /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_TOP
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2744,9 +2757,11 @@ contains
             s % variance = s % std_dev**2
 
             matching_bins(i_filter_surf) = OUT_TOP
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2759,9 +2774,11 @@ contains
             matching_bins(i_filter_mesh) = &
                  mesh_indices_to_bin(m, (/ i, j, k /) + 1, .true.)
             matching_bins(i_filter_surf) = IN_TOP
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2771,9 +2788,11 @@ contains
             s % variance = s % std_dev**2
 
             matching_bins(i_filter_surf) = OUT_TOP
-            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride) + 1
+            filter_index = sum((matching_bins(1:t%n_filters) - 1) * t % stride)&
+                 + 1
             temp_std_dev = temp_t % results(1,filter_index) % trigger_sum_sq
-            temp_rel_err = temp_std_dev / temp_t % results(1,filter_index) % trigger_sum
+            temp_rel_err = temp_std_dev &
+                 / temp_t % results(1,filter_index) % trigger_sum
             if (s % std_dev < temp_std_dev) then 
               s % std_dev = temp_std_dev
             end if
@@ -2955,17 +2974,15 @@ contains
 
       call statistics_result(t % results, t % n_realizations)
     end do
-      
-      
+
     ! Calculate statistics for global tallies
     call statistics_result(global_tallies, n_realizations)
-    
 
   end subroutine tally_statistics
-  
+
 !===============================================================================
-! TALLY_TRIGGER_STATISTICS just computes the mean and standard deviation of the  
-! mean of each tally and stores them in the val_sq attributes of the 
+! TALLY_TRIGGER_STATISTICS just computes the mean and standard deviation of the
+! mean of each tally and stores them in the val_sq attributes of the
 ! TriggerResults respectively for trigger.
 !===============================================================================
 
@@ -2977,12 +2994,10 @@ contains
     call trigger_statistics_result(t % results, t % n_realizations, s % results)
 
   end subroutine tally_trigger_statistics
-  
-
 
 !===============================================================================
-! ACCUMULATE_RESULT accumulates results from many histories (or many generations)
-! into a single realization of a random variable.
+! ACCUMULATE_RESULT accumulates results from many histories (or many
+! generations) into a single realization of a random variable.
 !===============================================================================
 
   elemental subroutine accumulate_result(this)
@@ -3017,6 +3032,7 @@ contains
     ! Calculate sample mean and standard deviation of the mean -- note that we
     ! have used Bessel's correction so that the estimator of the variance of the
     ! sample mean is unbiased.
+
     this % sum    = this % sum/n
     this % sum_sq = sqrt((this % sum_sq/n - this % sum * &
          this % sum) / (n - 1))
@@ -3043,7 +3059,7 @@ contains
          that % trigger_sum) / (n - 1))
 
   end subroutine trigger_statistics_result
-  
+
 !===============================================================================
 ! RESET_RESULT zeroes out the value and accumulated sum and sum-squared for a
 ! single TallyResult.

@@ -143,19 +143,20 @@ module global
 
   ! Use confidence intervals for results instead of standard deviations
   logical :: confidence_intervals = .false.
-  
+
   ! Check whether reach the trigger 
   logical :: satisfy_triggers = .false.
   ! Temporary trig_dist to see how far the result is from trigger threshold
   type(TriggerDistance) :: trig_dist
+
   ! ============================================================================
   ! EIGENVALUE SIMULATION VARIABLES
 
   integer(8) :: n_particles = 0   ! # of particles per generation
   integer    :: n_batches         ! # of batches
-  integer    :: n_basic_batches   ! # of basic batches ,when trigger is applied, 
-                                  !   it represents the minimum number of batches
-                                  !   the OpenMC will run
+  integer    :: n_basic_batches   ! # of basic batches ,when trigger is applied,
+                                  !   it represents the minimum number of
+                                  !   batches OpenMC will run
   integer    :: n_inactive        ! # of inactive batches
   integer    :: n_active          ! # of active batches
   integer    :: gen_per_batch = 1 ! # of generations per batch

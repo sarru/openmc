@@ -95,15 +95,15 @@ contains
       end do GENERATION_LOOP
 
       call finalize_batch()
-      
+
       if (satisfy_triggers) exit BATCH_LOOP
-      
+ 
       ! Check batches to find whether to compare the result with trigger, check 
       ! the trigger and write the statepoint file
 
 
     end do BATCH_LOOP
-    
+
     call time_active % stop()
 
     ! ==========================================================================
@@ -214,19 +214,20 @@ contains
       call reset_result(global_tallies)
       n_realizations = 0
     end if
+
     ! Perform CMFD calculation if on
     if (cmfd_on) call execute_cmfd()
 
     ! Display output
     if (master) call print_batch_keff()
-    
+
     ! Check_triggers
     if (master) then
         call check_triggers()
       end if
 #ifdef MPI        
       call MPI_BCAST(satisfy_triggers, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, &
-             mpi_err)              
+           mpi_err)              
 #endif
       if (satisfy_triggers .or. (trigger_on .and. n_batches == current_batch)) &
            then
@@ -256,13 +257,13 @@ contains
     end if
 
   end subroutine finalize_batch
-  
+
 !===============================================================================
 ! CHECK_TRIGGERS checks whether to check the triggers and whether the triggers' 
 ! thresholds are reached. 
 !===============================================================================
+
   subroutine check_triggers()
-    implicit none
     integer :: n_pred_batches   ! # predicted number of batches till all 
                                 ! triggers are satisfied
     
@@ -279,12 +280,12 @@ contains
     call calculate_combined_keff()
     ! Check the trigger and output the result
     call check_tally_triggers()
-       
+
     ! When trigger threshold is reached, write information 
     if (satisfy_triggers) then
       call write_message("Trigger is satisfied for batch " &
            &// trim(to_str(current_batch)))
-    
+
         ! When trigger is not reached write information   
     elseif (trig_dist % temp_name == CHAR_EIGENVALUE) then
       call write_message("Trigger isn't reached, the max uncertainty/threshold&
@@ -302,11 +303,11 @@ contains
            &// trim(trig_dist % temp_name) // " in tally " &
            &// trim(to_str(trig_dist % id)))
     end if 
-    
+
     ! If batch_interval is not set, then then estimate the number of 
     ! batches till tally threshold is satisfied
     if ((.not. satisfy_triggers) .and. no_batch_interval) then
-         
+ 
       ! Estimate the number of batch interval and batches
       ! The prediction can be done because variances of the tally results are 
       ! proportional to 1/N in theroy, where N is the number of the batches or 
@@ -314,8 +315,8 @@ contains
       n_batch_interval = int((current_batch-n_inactive) * &
            (trig_dist % max_ratio ** 2)) + n_inactive-n_basic_batches + 1
       n_pred_batches = n_batch_interval + n_basic_batches
-         
-          
+ 
+
       ! If predicted number of batches to convergence is bigger than then
       ! n_batches print it and stop. 
       if (n_batches < n_pred_batches) then 
@@ -955,6 +956,5 @@ contains
 
   end subroutine join_bank_from_threads
 #endif
-
 
 end module eigenvalue
