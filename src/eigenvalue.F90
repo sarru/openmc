@@ -23,11 +23,13 @@ module eigenvalue
                           reset_result, check_tally_triggers
   use tracking,     only: transport
 
+  implicit none
   private
   public :: run_eigenvalue
 
-  real(8) :: keff_generation ! Single-generation k on each processor
-  real(8) :: k_sum(2) = ZERO ! used to reduce sum and sum_sq
+  real(8)                   :: keff_generation ! Single-generation k on each
+                                               ! processor
+  real(8)                   :: k_sum(2) = ZERO ! Used to reduce sum and sum_sq
 
 contains
 
@@ -120,8 +122,8 @@ contains
 
   subroutine initialize_batch()
 
-    message = "Simulating batch " // trim(to_str(current_batch)) // "..."
-    call write_message(8)
+    call write_message("Simulating batch " // trim(to_str(current_batch)) &
+         &// "...", 8)
 
     ! Reset total starting particle weight used for normalizing tallies
     total_weight = ZERO
@@ -280,29 +282,25 @@ contains
        
     ! When trigger threshold is reached, write information 
     if (satisfy_triggers) then
-      message = "Trigger is satisfied for batch " &
-          // trim(to_str(current_batch))
-      call write_message()
+      call write_message("Trigger is satisfied for batch " &
+           &// trim(to_str(current_batch)))
     
         ! When trigger is not reached write information   
     elseif (trig_dist % temp_name == CHAR_EIGENVALUE) then
-      message = "Trigger isn't reached, the max uncertainty/threshold is " &
-           // trim(to_str(trig_dist % max_ratio)) // " for " &
-           // trim(trig_dist % temp_name)
-      call write_message()
+      call write_message("Trigger isn't reached, the max uncertainty/threshold&
+           & is " // trim(to_str(trig_dist % max_ratio)) // " for " &
+           &// trim(trig_dist % temp_name))
     elseif (trig_dist % temp_nuclide /= NO_NUCLIDE) then
-       message = "Trigger isn't reached, the max uncertainty/threshold is " & 
-            // trim(to_str(trig_dist % max_ratio)) // " of " & 
-            // trim(trig_dist % temp_nuclide) // " for " & 
-            // trim(trig_dist % temp_name) // " in tally " &
-            // trim(to_str(trig_dist % id))
-       call write_message()
+      call write_message("Trigger isn't reached, the max uncertainty/threshold&
+           & is " // trim(to_str(trig_dist % max_ratio)) // " of " & 
+           &// trim(trig_dist % temp_nuclide) // " for " & 
+           &// trim(trig_dist % temp_name) // " in tally " &
+           &// trim(to_str(trig_dist % id)))
     else
-      message = "Trigger isn't reached, the max uncertainty/threshold is " &
-           // trim(to_str(trig_dist % max_ratio)) // " for " &
-           // trim(trig_dist % temp_name) // " in tally " &
-           // trim(to_str(trig_dist % id))
-      call write_message()
+      call write_message("Trigger isn't reached, the max uncertainty/threshold&
+           & is " // trim(to_str(trig_dist % max_ratio)) // " for " &
+           &// trim(trig_dist % temp_name) // " in tally " &
+           &// trim(to_str(trig_dist % id)))
     end if 
     
     ! If batch_interval is not set, then then estimate the number of 
@@ -321,14 +319,12 @@ contains
       ! If predicted number of batches to convergence is bigger than then
       ! n_batches print it and stop. 
       if (n_batches < n_pred_batches) then 
-        message = "The estimated number of batches is " &
-             // trim(to_str(n_pred_batches)) & 
-             // "---bigger than max batches. "
-        call warning()
+        call warning("The estimated number of batches is " &
+             &// trim(to_str(n_pred_batches)) &
+             &// "---bigger than max batches. ")
       else
-        message = "The estimated number of batches is " &
-             // trim(to_str(n_pred_batches))
-        call write_message()
+        call write_message("The estimated number of batches is " &
+             &// trim(to_str(n_pred_batches)))
       end if
     end if
   end subroutine check_triggers
@@ -398,8 +394,7 @@ contains
     ! runs enough particles to avoid this in the first place.
 
     if (n_bank == 0) then
-      message = "No fission sites banked on processor " // to_str(rank)
-      call fatal_error()
+      call fatal_error("No fission sites banked on processor " // to_str(rank))
     end if
 
     ! Make sure all processors start at the same point for random sampling. Then
@@ -633,11 +628,11 @@ contains
         m % n_dimension = 3
         allocate(m % dimension(3))
         m % dimension = n
+        
+        ! determine width
+        m % width = (m % upper_right - m % lower_left) / m % dimension
+        
       end if
-
-      ! allocate and determine width
-      allocate(m % width(3))
-      m % width = (m % upper_right - m % lower_left) / m % dimension
 
       ! allocate p
       allocate(entropy_p(1, m % dimension(1), m % dimension(2), &
@@ -650,8 +645,7 @@ contains
 
     ! display warning message if there were sites outside entropy box
     if (sites_outside) then
-      message = "Fission source site(s) outside of entropy box."
-      call warning()
+      if (master) call warning("Fission source site(s) outside of entropy box.")
     end if
 
     ! sum values to obtain shannon entropy
@@ -869,8 +863,7 @@ contains
 
       ! Check for sites outside of the mesh
       if (master .and. sites_outside) then
-        message = "Source sites outside of the UFS mesh!"
-        call fatal_error()
+        call fatal_error("Source sites outside of the UFS mesh!")
       end if
 
 #ifdef MPI
@@ -900,8 +893,7 @@ contains
 
     ! Write message at beginning
     if (current_batch == 1) then
-      message = "Replaying history from state point..."
-      call write_message(1)
+      call write_message("Replaying history from state point...", 1)
     end if
 
     do current_gen = 1, gen_per_batch
@@ -918,8 +910,7 @@ contains
 
     ! Write message at end
     if (current_batch == restart_batch) then
-      message = "Resuming simulation..."
-      call write_message(1)
+      call write_message("Resuming simulation...", 1)
     end if
 
   end subroutine replay_batch_history

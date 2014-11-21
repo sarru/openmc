@@ -99,8 +99,6 @@ default. This element has the following attributes/sub-elements:
 
     *Default*: 1.0
 
-.. _eigenvalue:
-
 ``<eigenvalue>`` Element
 ------------------------
 
@@ -140,21 +138,19 @@ should be performed. It has the following attributes/sub-elements:
       The type of the keff_trigger. Accepted options are "variance", "std_dev",
       and "rel_err".
 
-     :rel_err:
-       Relative error of the batch mean :math:`\frac{\sigma}{\mu}`
+      :rel_err:
+        Relative error of the batch mean :math:`\frac{\sigma}{\mu}`
 
-     :std_dev:
-       Standard deviation of the batch mean :math:`\sigma`
+      :std_dev:
+        Standard deviation of the batch mean :math:`\sigma`
 
-     :variance:
-       Variance of the batch mean :math:`\sigma^2`
-
-     *Default*: None
+      :variance:
+        Variance of the batch mean :math:`\sigma^2`
 
     :threshold:
       The value of the keff_trigger.
 
-      *Default*: None
+    *Default*: None
 
     .. note:: See section on the :ref:`trigger` for more information.
 
@@ -188,7 +184,7 @@ problem. It has the following attributes/sub-elements:
 
     *Default*: None
 
-  :upper_right
+  :upper_right:
     The Cartesian coordinates of the upper-right corner of the mesh.
 
     *Default*: None
@@ -196,8 +192,8 @@ problem. It has the following attributes/sub-elements:
 ``<fixed_source>`` Element
 --------------------------
 
-The ``<fixed_source>`` element indicates that a fixed source calculation should
-be performed. It has the following attributes/sub-elements:
+The ``<fixed_source>`` element indicates that a fixed source calculation should be
+performed. It has the following attributes/sub-elements:
 
   :batches:
     The total number of batches. For fixed source calculations, each batch
@@ -268,8 +264,7 @@ out the file and "false" will not.
 
     *Default*: true
 
-  .. note:: The tally results will always be written to a binary/HDF5 state
-            point file.
+  .. note:: The tally results will always be written to a binary/HDF5 state point file.
 
 ``<output_path>`` Element
 -------------------------
@@ -290,7 +285,7 @@ or sub-elements and can be set to either "false" or "true".
   *Default*: true
 
 ``<resonance_scattering>`` Element
-----------------------
+----------------------------------
 
 The ``resonance_scattering`` element can contain one or more of the following
 attributes or sub-elements:
@@ -298,7 +293,7 @@ attributes or sub-elements:
   :scatterer:
     An element with attributes/sub-elements called ``nuclide``, ``method``,
     ``xs_label``, ``xs_label_0K``, ``E_min``, and ``E_max``. The ``nuclide``
-    attribute is the name, as given by the ``name`` attribute within the 
+    attribute is the name, as given by the ``name`` attribute within the
     ``nuclide`` sub-element of the ``material`` element in ``materials.xml``,
     of the nuclide to which a resonance scattering treatment is to be applied.
     The ``method`` attribute gives the type of resonance scattering treatment
@@ -462,6 +457,13 @@ attributes/sub-elements:
 
       *Default*: 0.988 2.249
 
+  :write_initial:
+    An element specifying whether to write out the initial source bank used at
+    the beginning of the first batch. The output file is named
+    "initial_source.binary(h5)"
+
+      *Default*: false
+
 ``<state_point>`` Element
 -------------------------
 
@@ -511,8 +513,8 @@ attributes/sub-elements:
     *Default*: None
 
   :separate:
-    If this element is set to "true", a separate binary source point file will
-    be written. Otherwise, the source sites will be written in the state point
+    If this element is set to "true", a separate binary source point file will be
+    written. Otherwise, the source sites will be written in the state point
     directly.
 
     *Default*: false
@@ -567,11 +569,7 @@ integers: the batch number, generation number, and particle number.
 ``<track>`` Element
 -------------------
 
-The ``<track>`` element specifies particles for which OpenMC will output binary
-files describing particle position at every step of its transport. This element
-should be followed by triplets of integers.  Each triplet describes one particle
-. The integers in each triplet specify the batch number, generation number, and
-particle number, respectively.
+The ``<track>`` element specifies particles for which OpenMC will output binary files describing particle position at every step of its transport. This element should be followed by triplets of integers.  Each triplet describes one particle.  The integers in each triplet specify the batch number, generation number, and particle number, respectively.
 
   *Default*: None
 
@@ -614,7 +612,8 @@ It has the following attributes/sub-elements:
     source and small criticality calculations, but is very optimistic for highly
     coupled full-core reactor problems.
 
-    *Default*: If this tag is not present, the ``batch_interval`` is predicted dynamically by OpenMC for each convergence check.
+    *Default*: If this tag is not present, the ``batch_interval`` is predicted
+      dynamically by OpenMC for each convergence check.
 
 ``<uniform_fs>`` Element
 ------------------------
@@ -824,7 +823,10 @@ Each ``<cell>`` element can have the following attributes or sub-elements:
     is on the negative side of surface 3 and the positive side of surface 5, the
     bounding surfaces would be given as "-3 5".
 
-    *Default*: None
+    .. note:: The surface attribute/element can be omitted to make a cell fill
+              its entire universe.
+
+    *Default*: No surfaces
 
   :rotation:
     If the cell is filled with a universe, this element specifies the angles in
@@ -1011,8 +1013,6 @@ post-collision energy, and an arbitrary structured mesh.
 The three valid elements in the tallies.xml file are ``<tally>``, ``<mesh>``,
 and ``<assume_separate>``.
 
-.. _tally:
-
 ``<tally>`` Element
 -------------------
 
@@ -1035,12 +1035,11 @@ The ``<tally>`` element accepts the following sub-elements:
     The ``filter`` element has the following attributes/sub-elements:
 
       :type:
-        The type of the filter. Accepted options are "cell", "cellborn",
-        "material", "universe", "energy", "energyout", and "mesh".
+        The type of the filter. Accepted options are "cell", "cellborn", "material",
+        "universe", "energy", "energyout", and "mesh".
 
       :bins:
-        For each filter type, the corresponding ``bins`` entry is given as
-        follows:
+        For each filter type, the corresponding ``bins`` entry is given as follows:
 
         :cell:
           A list of cells in which the tally should be accumulated.
@@ -1135,20 +1134,20 @@ The ``<tally>`` element accepts the following sub-elements:
 
     :scatter-PN:
       Tally all of the scattering moments from order 0 to N, where N is the
-      Legendre expansion order of the change in particle angle
-      :math:`\left(\mu\right)`. That is, ``scatter-P1`` is equivalent to
-      requesting tallies of ``scatter-0`` and ``scatter-1``.  Like for
-      ``scatter-N``, N must be between 0 and 10. As an example, tallying up
-      to the 2\ :sup:`nd` \ scattering moment would be specified as
+      Legendre expansion order of the change in particle angle :math:`\left(\mu\right)`.
+      That is, ``scatter-P1`` is equivalent to requesting tallies of
+      ``scatter-0`` and ``scatter-1``.  Like for ``scatter-N``,
+      N must be between 0 and 10. As an example, tallying up to the
+      2\ :sup:`nd` \ scattering moment would be specified as
       ``<scores> scatter-P2 </scores>``.
 
     :scatter-YN:
       ``scatter-YN`` is similar to ``scatter-PN`` except an additional
       expansion is performed for the incoming particle direction
-      :math:`\left(\Omega\right)` using the real spherical harmonics.  This is
-      useful for performing angular flux moment weighting of the scattering
-      moments. Like ``scatter-PN``, ``scatter-YN`` will tally all of the
-      moments from order 0 to N; N again must be between 0 and 10.
+      :math:`\left(\Omega\right)` using the real spherical harmonics.  This is useful
+      for performing angular flux moment weighting of the scattering moments.
+      Like ``scatter-PN``, ``scatter-YN`` will tally all of the moments from
+      order 0 to N; N again must be between 0 and 10.
 
     :nu-scatter, nu-scatter-N, nu-scatter-PN, nu-scatter-YN:
       These scores are similar in functionality to their ``scatter*``
@@ -1162,10 +1161,10 @@ The ``<tally>`` element accepts the following sub-elements:
       all of the harmonic moments of order 0 to N.  N must be between 0 and 10.
 
     :total-YN:
-      Spherical harmonic expansion of the incoming particle's direction of
-      motion :math:`\left(\Omega\right)` of the total flux.  This score will
-      tally all of the harmonic moments of order 0 to N.  N must be between 0
-      and 10.
+      The total reaction rate expanded via spherical harmonics about the
+      direction of motion of the neutron, :math:`\Omega`.
+      This score will tally all of the harmonic moments of order 0 to N.  N must
+      be between 0 and 10.
 
     :current:
       Partial currents on the boundaries of each cell in a mesh.
@@ -1183,35 +1182,35 @@ The ``<tally>`` element accepts the following sub-elements:
     specify the trigger's type, threshold and scores to which it will be
     applied. It has the following attributes/sub-elements:
 
-   :type:
-     The type of the trigger. Accepted options are "variance", "std_dev",
-     and "rel_err".
+    :type:
+      The type of the trigger. Accepted options are "variance", "std_dev",
+      and "rel_err".
 
-     :variance:
-       Variance of the batch mean :math:`\sigma^2`
+      :variance:
+        Variance of the batch mean :math:`\sigma^2`
 
-     :std_dev:
-       Standard deviation of the batch mean :math:`\sigma`
+      :std_dev:
+        Standard deviation of the batch mean :math:`\sigma`
 
-     :rel_err:
-       Relative error of the batch mean :math:`\frac{\sigma}{\mu}`
+      :rel_err:
+        Relative error of the batch mean :math:`\frac{\sigma}{\mu}`
 
-     *Default*: None
+      *Default*: None
 
-   :threshold:
-     The value of the trigger for tally.
+    :threshold:
+      The value of the trigger for tally.
 
-     *Default*: None
+      *Default*: None
 
-   :scores:
-     The score(s) in this tally to which the trigger should be applied.
+    :scores:
+      The score(s) in this tally to which the trigger should be applied.
 
-     .. note:: The ``scores`` in ``trigger`` must have been defined in
-               ``scores`` in ``tally``. And each trigger just includes a
-               scores. An optional "all" is also allowed. This means all the
-               scores in this tally share the same trigger.
+      .. note:: The ``scores`` in ``trigger`` must have been defined in
+                 ``scores`` in ``tally``. And each trigger just includes a
+                scores. An optional "all" is also allowed. This means all the
+                scores in this tally share the same trigger.
 
-     *Default*: "all"
+      *Default*: "all"
 
 ``<mesh>`` Element
 ------------------
@@ -1251,8 +1250,8 @@ overhead. The effect of assuming all tallies are spatially separate is that once
 one tally is scored to, the same event is assumed not to score to any other
 tallies. This element should be followed by "true" or "false".
 
-  .. warning:: If used incorrectly, the assumption that all tallies are
-               spatially separate can lead to incorrect results.
+  .. warning:: If used incorrectly, the assumption that all tallies are spatially
+    separate can lead to incorrect results.
 
   *Default*: false
 
@@ -1268,16 +1267,14 @@ element of the plots.xml is simply ``<plots>`` and any number output plots can
 be defined with ``<plot>`` sub-elements.  Two plot types are currently
 implemented in openMC:
 
-* ``slice``  2D pixel plot along one of the major axes. Produces a PPM image
-  file.
-* ``voxel``  3D voxel data dump. Produces a binary file containing voxel xyz
-  position and cell or material id.
+* ``slice``  2D pixel plot along one of the major axes. Produces a PPM image file.
+* ``voxel``  3D voxel data dump. Produces a binary file containing voxel xyz position and cell or material id.
 
 
 ``<plot>`` Element
 ------------------
 
-Each plot must contain a combination of the following attributes or
+Each plot is specified by a combination of the following attributes or
 sub-elements:
 
   :id:
@@ -1297,6 +1294,18 @@ sub-elements:
     position.
 
     *Default*: ``cell``
+
+  :level:
+    Universe depth to plot at (optional).  This parameter controls how many
+    universe levels deep to pull cell and material ids from when setting plot
+    colors.  If a given location does not have as many levels as specified,
+    colors will be taken from the lowest level at that location. For example, if
+    ``level`` is set to zero colors will be taken from top-level (universe zero)
+    cells only.  However, if ``level`` is set to 1 colors will be taken from
+    cells in universes that fill top-level fill-cells, and from top-level cells
+    that contain materials.
+
+    *Default*: Whatever the deepest universe is in the model
 
   :origin:
     Specifies the (x,y,z) coordinate of the center of the plot.  Should be three
@@ -1336,7 +1345,7 @@ sub-elements:
 attribute or sub-element:
 
   :pixels:
-    Specifies the number of pixes or voxels to be used along each of the basis
+    Specifies the number of pixels or voxels to be used along each of the basis
     directions for "slice" and "voxel" plots, respectively. Should be two or
     three integers separated by spaces.
 
@@ -1368,7 +1377,7 @@ attributes or sub-elements.  These are not used in "voxel" plots:
     Specifies the RGB color of the regions where no OpenMC cell can be found.
     Should be three integers separated by spaces.
 
-    *Default*: 0 0 0 (white)
+    *Default*: 0 0 0 (black)
 
   :col_spec:
     Any number of this optional tag may be included in each ``<plot>`` element,
@@ -1408,23 +1417,45 @@ attributes or sub-elements.  These are not used in "voxel" plots:
 
     *Default*: None
 
+  :meshlines:
+    The ``meshlines`` sub-element allows for plotting the boundaries of
+    a tally mesh on top of a plot. Only one ``meshlines`` element is allowed per
+    ``plot`` element, and it must contain as attributes or sub-elements a mesh
+    type and a linewidth.  Optionally, a color may be specified for the overlay:
+
+    :meshtype:
+      The type of the mesh to be plotted. Valid options are "tally", "entropy",
+      "ufs", and "cmfd".  If plotting "tally" meshes, the id of the mesh to plot
+      must be specified with the ``id`` sub-element.
+
+    :id:
+      A single integer id number for the mesh specified on ``tallies.xml`` that
+      should be plotted. This element is only required for ``meshtype="tally"``.
+
+    :linewidth:
+      A single integer number of pixels of linewidth to specify for the mesh
+      boundaries. Specifying this as 0 indicates that lines will be 1 pixel
+      thick, specifying 1 indicates 3 pixels thick, specifying 2 indicates
+      5 pixels thick, etc.
+
+    :color:
+      Specifies the custom color for the meshlines boundaries. Should be 3
+      integers separated by whitespace.  This element is optional.
+
+      *Default*: 0 0 0 (black)
+
+    *Default*: None
+
+.. _usersguide_cmfd:
+
 ------------------------------
 CMFD Specification -- cmfd.xml
 ------------------------------
 
-Coarse mesh finite difference acceleration method has been implemented in
-OpenMC. Currently, it allows users to accelerate fission source convergence
-during inactive neutron batches. To run CMFD, the ``<run_cmfd>`` element in
+Coarse mesh finite difference acceleration method has been implemented in OpenMC.
+Currently, it allows users to accelerate fission source convergence during
+inactive neutron batches. To run CMFD, the ``<run_cmfd>`` element in
 ``settings.xml`` should be set to "true".
-
-``<active_flush>`` Element
---------------------------
-
-The ``<active_flush>`` element controls the batch where CMFD tallies should be
-reset. CMFD tallies should be reset before active batches so they are
-accumulated without bias.
-
-  *Default*: 0
 
 ``<begin>`` Element
 -------------------
@@ -1438,8 +1469,8 @@ The ``<begin>`` element controls what batch CMFD calculations should begin.
 
 The ``<display>`` element sets one additional CMFD output column. Options are:
 
-* "balance" - prints the RMS [%] of the resdiual from the neutron balance
-  equation on CMFD tallies.
+* "balance" - prints the RMS [%] of the resdiual from the neutron balance equation
+  on CMFD tallies.
 * "dominance" - prints the estimated dominance ratio from the CMFD iterations.
   **This will only work for power iteration eigensolver**.
 * "entropy" - prints the *entropy* of the CMFD predicted fission source.
@@ -1447,7 +1478,25 @@ The ``<display>`` element sets one additional CMFD output column. Options are:
 * "source" - prints the RMS [%] between the OpenMC fission source and CMFD
   fission source.
 
-  *Default*: None
+  *Default*: balance
+
+``<dhat_reset>`` Element
+------------------------
+
+The ``<dhat_reset>`` element controls whether :math:`\widehat{D}` nonlinear
+CMFD parameters should be reset to zero before solving CMFD eigenproblem.
+It can be turned on with "true" and off with "false".
+
+  *Default*: false
+
+``<downscatter>`` Element
+-------------------------
+
+The ``<downscatter>`` element controls whether an effective downscatter cross
+section should be used when using 2-group CMFD. It can be turned on with "true"
+and off with "false".
+
+  *Default*: false
 
 ``<feedback>`` Element
 ----------------------
@@ -1458,24 +1507,16 @@ It can be turned on with "true" and off with "false".
 
   *Default*: false
 
-``<inactive>`` Element
-----------------------
+``<gauss_seidel_tolerance>`` Element
+------------------------------------
 
-The ``<inactive>`` element controls if cmfd tallies should be accumulated
-during inactive batches. For some applications, CMFD tallies may not be
-needed until the start of active batches. This option can be turned on
-with "true" and off with "false"
+The ``<gauss_seidel_tolerance>`` element specifies two parameters. The first is
+the absolute inner tolerance for Gauss-Seidel iterations when performing CMFD
+and the second is the relative inner tolerance for Gauss-Seidel iterations
+for CMFD calculations. It is only used in the standalone CMFD power iteration
+solver and not when PETSc is active.
 
-  *Default*: true
-
-``<inactive_flush>`` Element
-----------------------------
-
-The ``<inactive_flush>`` element controls when CMFD tallies are reset during
-inactive batches. The integer set here is the interval at which this reset
-occurs. The amout of resets is controlled with the ``<num_flushes>`` element.
-
-  *Defualt*: 9999
+  *Default*: 1.e-10 1.e-5
 
 ``<ksp_monitor>`` Element
 -------------------------
@@ -1484,8 +1525,15 @@ The ``<ksp_monitor>`` element is used to view the convergence of linear GMRES
 iterations in PETSc. This option can be turned on with "true" and turned off
 with "false".
 
-
   *Default*: false
+
+``<ktol>`` Element
+--------------------
+
+The ``<ktol>`` element specifies the tolerance on the eigenvalue when performing
+CMFD power iteration.
+
+  *Default*: 1.e-8
 
 ``<mesh>`` Element
 ------------------
@@ -1555,19 +1603,11 @@ not impact the calculation.
 
   *Default*: 1.0
 
-``<num_flushes>`` Element
--------------------------
-
-The ``<num_flushes>`` element controls the number of CMFD tally resets that
-occur during inactive CMFD batches.
-
-  *Default*: 9999
-
 ``<power_monitor>`` Element
 ---------------------------
 
-The ``<power_monitor>`` element is used to view the convergence of power
-iteration. This option can be turned on with "true" and turned off with "false".
+The ``<power_monitor>`` element is used to view the convergence of power iteration.
+This option can be turned on with "true" and turned off with "false".
 
   *Default*: false
 
@@ -1575,17 +1615,8 @@ iteration. This option can be turned on with "true" and turned off with "false".
 -------------------------
 
 The ``<run_adjoint>`` element can be turned on with "true" to have an adjoint
-calculation be performed on the last batch when CMFD is active.
-
-  *Default*: false
-
-``<snes_monitor>`` Element
---------------------------
-
-The ``<snes_monitor>`` element is used to view the convergence of the nonlinear
- SNES function in PETSc. This option can be turned on with "true" and turned
-off with "false".
-
+calculation be performed on the last batch when CMFD is active. OpenMC should be
+compiled with PETSc when using this option.
 
   *Default*: false
 
@@ -1597,6 +1628,41 @@ standard power iteration or nonlinear Jacobian-free Newton Krylov (JFNK).
 By setting "power", power iteration is used and by setting "jfnk", JFNK is used.
 
   *Default*: power
+
+``<shift>`` Element
+--------------------
+
+The ``<shfit>`` element specifies an optional Wielandt shift parameter for
+accelerating power iterations. It can only be used when PETSc is not active.
+It is by default very large so the impact of the shift is effectively zero.
+
+  *Default*: 1e6
+
+``<spectral>`` Element
+----------------------
+
+The ``<spectral>`` element specifies an optional spectral radius that can be set to
+accelerate the convergence of Gauss-Seidel iterations during CMFD power iteration
+solve. Note this is only used in the standalone CMFD solver and does not affect
+the calculation when PETSc is active.
+
+  *Default*: power
+
+``<stol>`` Element
+------------------
+
+The ``<stol>`` element specifies the tolerance on the fission source when performing
+CMFD power iteration.
+
+  *Default*: 1.e-8
+
+``<tally_reset>`` Element
+-------------------------
+
+The ``<tally_reset>`` element contains a list of batch numbers in which CMFD tallies
+should be reset.
+
+  *Default*: None
 
 ``<write_matrices>`` Element
 ----------------------------

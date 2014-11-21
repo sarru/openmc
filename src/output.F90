@@ -13,7 +13,7 @@ module output
   use mesh,            only: mesh_indices_to_bin, bin_to_mesh_indices
   use particle_header, only: LocalCoord, Particle
   use plot_header
-  use string,          only: upper_case, to_str
+  use string,          only: to_upper, to_str
   use tally_header,    only: TallyObject
 
   implicit none
@@ -130,8 +130,7 @@ contains
     if (mod(len_trim(msg),2) == 0) m = m + 1
 
     ! convert line to upper case
-    line = msg
-    call upper_case(line)
+    line = to_upper(msg)
 
     ! print header based on level
     select case (header_level)
@@ -194,8 +193,9 @@ contains
 ! standard output stream.
 !===============================================================================
 
-  subroutine write_message(level)
+  subroutine write_message(message, level)
 
+    character(*) :: message
     integer, optional :: level ! verbosity level
 
     integer :: i_start    ! starting position
@@ -1428,6 +1428,12 @@ contains
       ! Plot id
       write(ou,100) "Plot ID:", trim(to_str(pl % id))
 
+      ! Plot filename
+      write(ou,100) "Plot file:", trim(pl % path_plot)
+
+      ! Plot level
+      write(ou,100) "Universe depth:", trim(to_str(pl % level))
+
       ! Plot type
       if (pl % type == PLOT_TYPE_SLICE) then
         write(ou,100) "Plot Type:", "Slice"
@@ -1588,8 +1594,8 @@ contains
       write(ou,102) "Leakage Fraction", global_tallies(LEAKAGE) % sum, &
            global_tallies(LEAKAGE) % sum_sq
     else
-      message = "Could not compute uncertainties -- only one active batch simulated!"
-      call warning()
+      if (master) call warning("Could not compute uncertainties -- only one &
+           &active batch simulated!")
 
       write(ou,103) "k-effective (Collision)", global_tallies(K_COLLISION) % sum
       write(ou,103) "k-effective (Track-length)", global_tallies(K_TRACKLENGTH)  % sum
