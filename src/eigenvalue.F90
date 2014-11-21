@@ -305,14 +305,9 @@ contains
       call write_message()
     end if 
     
-    if (satisfy_triggers) then     
-          
-      ! Get n_batches for state_point file
-      n_batches = current_batch
-       
     ! If batch_interval is not set, then then estimate the number of 
     ! batches till tally threshold is satisfied
-    elseif (no_batch_interval) then
+    if ((.not. satisfy_triggers) .and. no_batch_interval) then
          
       ! Estimate the number of batch interval and batches
       ! The prediction can be done because variances of the tally results are 
